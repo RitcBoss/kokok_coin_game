@@ -10,10 +10,36 @@ const finalScoreElement = document.getElementById('finalScore');
 
 // ตั้งค่าขนาด canvas
 function resizeCanvas() {
-  const containerWidth = Math.min(800, window.innerWidth - 40);
-  const containerHeight = window.innerHeight - 150;
-  canvas.width = containerWidth;
-  canvas.height = containerHeight;
+  // ตรวจสอบว่าเป็นมือถือหรือไม่
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    // สำหรับมือถือ ใช้ขนาดเต็มหน้าจอ
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // ปรับขนาดตัวละครและสิ่งกีดขวางให้เหมาะสมกับหน้าจอ
+    player.width = Math.min(60, canvas.width * 0.15);  // 15% ของความกว้างหน้าจอ แต่ไม่เกิน 60px
+    player.height = player.width;
+    player.speed = 5;  // ปรับความเร็วให้เหมาะสมกับมือถือ
+    
+    // ปรับ hitbox ของตัวละคร
+    player.hitbox.width = player.width * 0.6;
+    player.hitbox.height = player.hitbox.width;
+  } else {
+    // สำหรับเดสก์ท็อป ใช้ขนาดเดิม
+    const containerWidth = Math.min(800, window.innerWidth - 40);
+    const containerHeight = window.innerHeight - 150;
+    canvas.width = containerWidth;
+    canvas.height = containerHeight;
+    
+    // คืนค่าขนาดเดิมสำหรับเดสก์ท็อป
+    player.width = 80;
+    player.height = 80;
+    player.speed = 6;
+    player.hitbox.width = 50;
+    player.hitbox.height = 50;
+  }
   
   // ปรับตำแหน่งผู้เล่นเมื่อ canvas เปลี่ยนขนาด
   if (player) {
@@ -90,6 +116,43 @@ document.addEventListener('keyup', (e) => {
   if (e.key === 'ArrowRight') right = false;
 });
 
+// เพิ่ม touch controls สำหรับมือถือ
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault(); // ป้องกันการ scroll หน้าจอ
+  const touch = e.touches[0];
+  const touchX = touch.clientX - canvas.getBoundingClientRect().left;
+  
+  // แบ่งหน้าจอเป็นซ้าย-ขวา
+  if (touchX < canvas.width / 2) {
+    left = true;
+    right = false;
+  } else {
+    left = false;
+    right = true;
+  }
+});
+
+canvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  left = false;
+  right = false;
+});
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const touchX = touch.clientX - canvas.getBoundingClientRect().left;
+  
+  // อัพเดททิศทางตามตำแหน่งการแตะ
+  if (touchX < canvas.width / 2) {
+    left = true;
+    right = false;
+  } else {
+    left = false;
+    right = true;
+  }
+});
+
 function resetGame() {
   score = 0;
   obstacles = [];
@@ -104,16 +167,21 @@ function resetGame() {
 
 // สร้างสิ่งกีดขวาง
 function createObstacle() {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const x = Math.floor(Math.random() * (canvas.width - 50));
+  
+  // ปรับขนาดสิ่งกีดขวางตามประเภทอุปกรณ์
+  const obstacleSize = isMobile ? Math.min(90, canvas.width * 0.2) : 120; // 20% ของความกว้างหน้าจอสำหรับมือถือ แต่ไม่เกิน 90px
+  
   obstacles.push({
     x,
     y: 0,
-    width: 120,  // ปรับขนาดให้เล็กลง
-    height: 120, // ปรับขนาดให้เล็กลง
+    width: obstacleSize,
+    height: obstacleSize,
     speed: 3 * speedMultiplier,
     hitbox: {
-      width: 40,  // ปรับ hitbox
-      height: 40  // ปรับ hitbox
+      width: obstacleSize * 0.33,  // ปรับ hitbox ให้เป็น 1/3 ของขนาด
+      height: obstacleSize * 0.33
     }
   });
 }
@@ -215,12 +283,21 @@ function drawBackground() {
   if (gameRunning) {
     ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
   } else {
+    // วาดพื้นหลัง game over
     ctx.drawImage(gameOverBackgroundImg, 0, 0, canvas.width, canvas.height);
+    
+    // เพิ่ม overlay สีดำเพื่อให้ข้อความอ่านง่ายขึ้น
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 }
 
 function draw() {
-  if (!gameRunning) return;
+  if (!gameRunning) {
+    // วาดพื้นหลัง game over แม้จะไม่มีการเล่น
+    drawBackground();
+    return;
+  }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
@@ -253,9 +330,9 @@ function draw() {
     // คำนวณเปอร์เซ็นต์และแสดงผล
     const percentage = Math.min(Math.round((score / 1000) * 100));
     finalScoreElement.textContent = `Up to ${percentage}%`;
-    // เปลี่ยนรูปใน game over screen เป็น kokok
-    document.querySelector('#gameOver img').src = 'images/kokok.png';
     gameOverText.style.display = 'block';
+    // วาดพื้นหลัง game over ทันที
+    drawBackground();
     return;
   }
 

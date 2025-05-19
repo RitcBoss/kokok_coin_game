@@ -3,17 +3,26 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KOKOK Game</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            background-color: #000000;
+            background-color: #000;
+            overflow: hidden;
+            touch-action: none;
+            /* ป้องกันการ scroll บนมือถือ */
             font-family: Arial, sans-serif;
         }
 
@@ -23,28 +32,83 @@
         }
 
         #gameCanvas {
-            /* border: 2px solid #333; */
+            display: block;
             background-color: #000;
+            touch-action: none;
+            /* ป้องกันการ scroll บนมือถือ */
         }
 
         #gameOver {
             display: none;
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-image: url('images/surviveclimb.png');
-            background-size: cover;
-            background-position: center;
+            text-align: center;
+            color: white;
+            z-index: 100;
             padding: 30px;
             border-radius: 15px;
-            text-align: center;
-            width: 80%;
-            max-width: 400px;
-            height: 60%;
+            background-color: rgba(0, 0, 0, 0.7);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
             border: 2px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        #gameOver img {
+            max-width: 200px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        }
+
+        #gameOver h2 {
+            font-size: 32px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+        }
+
+        #gameOver p {
+            font-size: 20px;
+            margin: 10px 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+        }
+
+        #finalScore {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            #gameOver {
+                width: 90%;
+                padding: 20px;
+            }
+
+            #gameOver h2 {
+                font-size: 24px;
+            }
+
+            #gameOver p {
+                font-size: 18px;
+            }
+
+            #gameOver img {
+                max-width: 150px;
+            }
+        }
+
+        #score {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            z-index: 10;
         }
 
         #gameOver::before {
@@ -54,53 +118,23 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: #000000a3;
             border-radius: 15px;
             z-index: -1;
         }
+
 
         #gameOver>* {
             position: relative;
             z-index: 1;
         }
 
-        #gameOver img {
-            margin-top: 50px;
-            width: 400px;
-            height: 400px;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
-        }
-
-        #gameOver h2 {
-            color: #6ccb4f;
-            font-size: 36px;
-            margin: 0 0 20px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        #finalScore {
-            color: #6ccb4f;
-            font-size: 60px;
-            margin: 20px 0;
-            text-shadow: 5px 5px 3px rgba(162, 249, 137, 0.5);
-            font-weight: bold;
-        }
-
         #gameOver span {
             display: block;
-            font-size: 24px;
-            color: #fff;
+            font-size: 46px;
+            color: #5ecd26;
             margin-top: 20px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-        }
-
-        #scoreContainer {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #fff;
-            text-align: left;
+            text-shadow: 4px 3px 2px rgb(70 145 42 / 80%);
         }
 
         .score-label {
@@ -123,17 +157,13 @@
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
-        <div id="scoreContainer">
-            <span class="score-label">Score:</span>
-            <span class="score-value" id="scoreValue">0</span>
-        </div>
+        <div id="score">Score: <span id="scoreValue">0</span></div>
         <div id="gameOver">
             <h2>KOKOK TO THE MOON!</h2>
-            <div id="finalScore">up to %</div>
-            <span>Click Spacebar to play</span>
-            <div>
-                <img src="images/player.png" alt="Player">
-            </div>
+            <p><span id="finalScore">0%</span></p>
+            <p>Press Space to play again</p>
+
+            <img src="images/kokok.png" alt="Game Over">
         </div>
     </div>
     <script src="game.js"></script>
